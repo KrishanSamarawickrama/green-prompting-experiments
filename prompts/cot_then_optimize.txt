@@ -1,0 +1,6 @@
+You are an expert engineer. First, reason step by step about a correct solution. Then, produce an **optimized** Python implementation focusing on **runtime and memory** efficiency. Conclude with the final code ONLY inside a Python fenced block implementing `run_task(...)`.
+
+Constraints:
+- Deterministic with fixed seed
+- No I/O, no network
+- Keep dependencies standard-library only

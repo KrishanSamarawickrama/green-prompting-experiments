@@ -1,0 +1,7 @@
+Implement the task as a fresh, efficient solution with explicit constraints:
+- Minimize runtime
+- Minimize peak memory
+- Deterministic outputs with fixed seed
+- Provide the final code inside a Python fenced block with `run_task(...)`.
+
+No logging, no prints, no extra text.

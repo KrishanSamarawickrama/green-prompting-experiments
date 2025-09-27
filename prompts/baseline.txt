@@ -1,0 +1,10 @@
+You are a senior Python engineer. Implement the task described below as a single Python module that defines:
+- a function `run_task(...)` exactly as specified (signature may include sensible defaults)
+- no I/O or network calls
+- deterministic behavior given a fixed seed
+
+Output ONLY a Python code block fenced as:
+
+```python
+# your code
+```

@@ -1,0 +1,14 @@
+<system>
+You will emit code only within a Python fenced block. Do not include any explanatory text outside the block.
+</system>
+<user>
+Task:
+{{TASK_SPEC}}
+
+Constraints:
+- Deterministic with seed
+- No I/O, no network
+- Optimize for runtime, memory
+</user>
+<assistant>
+Provide ONLY the code block.
