@@ -1,0 +1,11 @@
+models:
+  - name: deepseek-coder:6.7b
+    pull: true
+  - name: qwen2.5-coder:7b
+    pull: true
+
+options:
+  temperature: 0.2
+  top_p: 0.9
+  num_ctx: 4096
+  seed: 1234
