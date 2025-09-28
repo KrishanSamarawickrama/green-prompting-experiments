@@ -1,10 +1,11 @@
 import argparse, json, re, sys
 from pathlib import Path
 from datetime import datetime
+from typing import Dict, Any
 import yaml
 from harness.ollama_client import generate as ollama_generate
 
-def read(path): 
+def read(path):
     return Path(path).read_text(encoding="utf-8")
 
 def build_prompt(template_path: str, task_spec_path: str) -> str:
@@ -12,7 +13,7 @@ def build_prompt(template_path: str, task_spec_path: str) -> str:
     spec = read(task_spec_path)
     return tpl.replace("{{TASK_SPEC}}", spec)
 
-# --- Robust extractors ---
+# --- Robust extractors (unchanged) ---
 FENCE_PATTERNS = [
     r"```python\s*(.*?)\s*```",
     r"```py\s*(.*?)\s*```",
@@ -26,9 +27,9 @@ def extract_python_code_any(text: str) -> str | None:
         m = re.search(pat, text, re.DOTALL | re.IGNORECASE)
         if m:
             code = m.group(1).strip()
+            # Prefer blocks that actually define run_task, but return any fenced code if present
             if "def run_task" in code:
                 return code
-            # If fenced but no run_task, still return code (may be helper + fn at end)
             return code
 
     # Fallback: find a region starting at run_task
@@ -63,6 +64,43 @@ def repair_prompt(original_response: str) -> str:
         f"{original_response}\n"
     )
 
+# --- New: safe defaults + shallow merge with user --options ---
+def _default_options_for(prompt_name: str) -> Dict[str, Any]:
+    """
+    Conservative defaults to reduce prose leakage and keep outputs deterministic.
+    Users can override any/all via --options YAML.
+    """
+    common_stops = [
+        "\n\nExplanation",
+        "\n\nReasoning",
+        "\n\nNotes:",
+        "\n```text",
+        "\n```bash",
+        "\n\nExample",
+        "\n\nOutput:",
+        "\n\nDiscussion",
+    ]
+    # Slightly stronger guards for optimize-style prompts which tend to narrate
+    if prompt_name in {"cot_then_optimize"}:
+        stops = common_stops + ["\n# Discussion", "\n# Rationale"]
+    else:
+        stops = common_stops
+
+    return {
+        "temperature": 0.1,
+        "top_p": 0.9,
+        "num_predict": 640,  # bump if tasks are longer
+        "seed": 42,          # reproducibility across runs; override with --options if needed
+        "stop": stops,
+    }
+
+def _merge_options(user_opts: Dict[str, Any] | None, defaults: Dict[str, Any]) -> Dict[str, Any]:
+    if not user_opts:
+        return dict(defaults)
+    merged = dict(defaults)
+    merged.update(user_opts)  # user wins on conflicts
+    return merged
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--task-id", required=True, choices=["inefficient_sort","modular_example","unit_test_gen"])
@@ -79,15 +117,15 @@ if __name__ == "__main__":
     template = f"prompts/{args.prompt}.txt"
     spec = f"tasks/task_specs/{args.task_id}.md"
 
-    # build prompt
+    # build prompt (keeps your {{TASK_SPEC}} replacement)
     tpl_text = read(template)
     spec_text = read(spec)
     prompt = tpl_text.replace("{{TASK_SPEC}}", spec_text)
 
-    # options
-    options = None
-    if args.options:
-        options = yaml.safe_load(args.options)
+    # options: merge safe defaults with user overrides
+    defaults = _default_options_for(args.prompt)
+    user_options = yaml.safe_load(args.options) if args.options else None
+    options = _merge_options(user_options, defaults)
 
     # run generation (with optional CodeCarbon)
     def _call_model(p):
@@ -114,7 +152,7 @@ if __name__ == "__main__":
             return ollama_generate(args.model, p, options=options)
 
     resp = _call_model(prompt)
-    txt = resp.get("response","")
+    txt = resp.get("response", "")
 
     if args.save_raw:
         save_debug_raw(txt, Path("data/raw"), f"{args.task_id}__{args.prompt}__{slugify(args.model)}")

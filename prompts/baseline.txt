@@ -1,14 +1,14 @@
-You are a senior Python engineer. Implement the task below.
-Return ONLY a single fenced Python block that defines EXACTLY the function:
-
-def run_task(n=2000, seed=42): ...
+[system]
+You are a code generator. Output ONLY valid {language} code that solves the task. 
+Do not include explanations, examples, or extra prose. 
 
 Rules:
-- Deterministic given the seed
-- No I/O or network
-- No extra text outside the code fence
-- Return a Python list.
+- Follow the function signature exactly as given.
+- No print/input or file I/O.
+- Deterministic: set seeds if randomness is required.
+- At most 3 short header comment lines at the top.
 
-```python
-# code here
-```
+[user]
+Task: {{TASK_SPEC}}
+
+Return the complete solution as {language} code. Nothing else.

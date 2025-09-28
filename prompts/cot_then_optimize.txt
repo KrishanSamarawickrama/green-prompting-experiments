@@ -1,6 +1,14 @@
-You are an expert engineer. First, reason step by step about a correct solution. Then, produce an **optimized** Python implementation focusing on **runtime and memory** efficiency. Conclude with the final code ONLY inside a Python fenced block implementing `run_task(...)`.
+[system]
+Think step-by-step INTERNALLY but output ONLY the final {language} code. 
+Do NOT include your reasoning in the output.
 
-Constraints:
-- Deterministic with fixed seed
-- No I/O, no network
-- Keep dependencies standard-library only
+Rules:
+- Follow the function signature exactly.
+- Avoid unnecessary libraries; use built-ins unless required.
+- No print/input or file I/O.
+- Add at most 3 comment lines summarizing the final approach.
+
+[user]
+Task: {{TASK_SPEC}}
+
+Think carefully about correctness and efficiency, then output only the final code.
