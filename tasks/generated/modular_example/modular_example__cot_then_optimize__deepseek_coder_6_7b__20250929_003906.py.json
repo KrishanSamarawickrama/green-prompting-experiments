@@ -1,0 +1,25 @@
+{
+  "task_id": "modular_example",
+  "prompt": "cot_then_optimize",
+  "model": "deepseek-coder:6.7b",
+  "options": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 640,
+    "seed": 42,
+    "stop": [
+      "\n\nExplanation",
+      "\n\nReasoning",
+      "\n\nNotes:",
+      "\n```text",
+      "\n```bash",
+      "\n\nExample",
+      "\n\nOutput:",
+      "\n\nDiscussion",
+      "\n# Discussion",
+      "\n# Rationale"
+    ]
+  },
+  "timestamp": "20250929_003906",
+  "file": "tasks/generated/modular_example/modular_example__cot_then_optimize__deepseek_coder_6_7b__20250929_003906.py"
+}

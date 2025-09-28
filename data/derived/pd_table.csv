@@ -1,0 +1,6 @@
+task_id,variant,correct,pd_runtime,pd_memory,pd_flops,pd_energy
+inefficient_sort,deepseek-coder_6_7b_baseline,1,0.0,0.0,0.0,0.0
+inefficient_sort,deepseek-coder_6_7b_cot_then_optimize,1,0.0,0.0,0.0,0.0
+inefficient_sort,deepseek-coder_6_7b_eff_from_scratch,1,0.0,0.0,0.0,0.0
+inefficient_sort,deepseek-coder_6_7b_tagged_explained,1,0.0,0.0,0.0,0.0
+modular_example,deepseek-coder_6_7b_cot_then_optimize,1,0.0,0.0,0.0,0.0
