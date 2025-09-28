@@ -5,11 +5,16 @@ def parse_perf_stderr(stderr: str):
     """
     Extracts the FLOPs event count from perf stderr output.
     Looks for lines containing the event name and parses the first numeric column.
+    Handles both regular format (whitespace-separated) and CSV format (comma-separated).
     """
     flops = None
     for line in stderr.splitlines():
         if FLOPS_EVENT in line:
-            parts = line.strip().split()
+            # Check if this is CSV format (contains commas)
+            if "," in line:
+                parts = line.strip().split(",")
+            else:
+                parts = line.strip().split()
             try:
                 flops = int(parts[0].replace(",", ""))
             except Exception:

@@ -103,7 +103,8 @@ def _merge_options(user_opts: Dict[str, Any] | None, defaults: Dict[str, Any]) -
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--task-id", required=True, choices=["inefficient_sort","modular_example","unit_test_gen"])
+    ap.add_argument("--task-id", required=True, choices=["inefficient_sort", "modular_example", "unit_test_gen",
+        "log_file_parser", "json_data_normalizer", "cache_with_expiry"])
     ap.add_argument("--prompt", required=True,
                     choices=["baseline","cot_then_optimize","eff_from_scratch","tagged_explained"])
     ap.add_argument("--model", default="deepseek-coder:6.7b")

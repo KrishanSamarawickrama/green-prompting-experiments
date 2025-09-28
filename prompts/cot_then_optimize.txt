@@ -1,5 +1,5 @@
 [system]
-Think step-by-step INTERNALLY but output ONLY the final {language} code. 
+Think step-by-step INTERNALLY but output ONLY the final python code. 
 Do NOT include your reasoning in the output.
 
 Rules:
