@@ -36,23 +36,30 @@ if __name__ == "__main__":
                     help="Log inference energy/CO2e with CodeCarbon during generation")
     args = ap.parse_args()
 
+    print(f"[INFO] Using template: prompts/{args.prompt}.txt")
     template = f"prompts/{args.prompt}.txt"
+    print(f"[INFO] Using task spec: tasks/task_specs/{args.task_id}.md")
     spec = f"tasks/task_specs/{args.task_id}.md"
 
     options = None
     if args.options:
+        print(f"[INFO] Overriding Ollama options with: {args.options}")
         options = yaml.safe_load(args.options)
 
+    print("[INFO] Building prompt...")
     prompt = build_prompt(template, spec)
+    print("[INFO] Prompt built. Length:", len(prompt))
 
     # Optional inference energy logging with CodeCarbon
     resp = None
     if args.with_codecarbon:
+        print("[INFO] CodeCarbon tracking enabled. Starting emissions tracker...")
         from codecarbon import EmissionsTracker
         Path("data/raw").mkdir(parents=True, exist_ok=True)
         tracker = EmissionsTracker(project_name="llm_generation", output_dir="data/raw", log_level="error")
         tracker.start()
         try:
+            print(f"[INFO] Generating with model: {args.model}")
             resp = ollama_generate(args.model, prompt, options=options)
         finally:
             emissions = tracker.stop()
@@ -68,12 +75,16 @@ if __name__ == "__main__":
             Path("data/raw").mkdir(parents=True, exist_ok=True)
             with open("data/raw/codecarbon_generation.jsonl","a", encoding="utf-8") as f:
                 f.write(json.dumps(log) + "\n")
+            print(f"[INFO] Emissions logged: {emissions} kg CO2e")
     else:
+        print(f"[INFO] Generating with model: {args.model}")
         resp = ollama_generate(args.model, prompt, options=options)
 
+    print("[INFO] Model response received. Extracting Python code...")
     txt = resp.get("response", "")
     code = extract_python_code(txt)
     if not code:
+        print("[ERROR] Failed to extract Python code block from model response.")
         raise SystemExit("Failed to extract Python code block from model response.")
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -82,6 +93,7 @@ if __name__ == "__main__":
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / fname
     out_path.write_text(code, encoding="utf-8")
+    print(f"[INFO] Python code saved to: {out_path}")
 
     meta = {
         "task_id": args.task_id,
@@ -92,4 +104,5 @@ if __name__ == "__main__":
         "file": str(out_path)
     }
     (out_dir / (fname + ".json")).write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    print(f"Saved: {out_path}")
+    print(f"[INFO] Metadata saved to: {(out_dir / (fname + '.json'))}")
+    print(f"[SUCCESS] Saved: {out_path}")

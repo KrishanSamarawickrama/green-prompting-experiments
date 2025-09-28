@@ -51,7 +51,7 @@ full-sort:
 	python -m harness.generate --task-id inefficient_sort --prompt $(PROMPT) --model $(MODEL) --with-codecarbon
 	python -m harness.run --task-id inefficient_sort --impl tasks.generated.inefficient_sort.AUTO_PICK \
 		--variant $(VARIANT) --runs $(RUNS) --warmup $(WARMUP) --energy-source $(ENERGY_SOURCE) \
-		$$( [ "$(ENERGY_SOURCE)" = "csv" ] && echo --energy-csv $(ENERGY_CSV) || true )
+		$$( test "$(ENERGY_SOURCE)" = "csv" && printf -- ' --energy-csv %s' "$(ENERGY_CSV)" || true )
 	python analysis/compute_gc.py
 	python analysis/stats.py
 

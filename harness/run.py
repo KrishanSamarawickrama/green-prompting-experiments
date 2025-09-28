@@ -87,37 +87,55 @@ if __name__ == "__main__":
     ap.add_argument("--skip-perf", action="store_true", help="Skip FLOPs measurement if perf missing.")
     args = ap.parse_args()
 
+    print(f"[INFO] Starting run harness for task: {args.task_id}")
     impl = args.impl
+    print(f"[INFO] Implementation module: {impl}")
     if impl.endswith(".AUTO_PICK"):
+        print(f"[INFO] AUTO_PICK enabled. Locating latest generated module for task: {args.task_id}")
         mod_path = latest_generated_module(args.task_id)
         if not mod_path:
+            print(f"[ERROR] No generated module found for task {args.task_id}.")
             raise SystemExit(f"No generated module found for task {args.task_id}.")
+        print(f"[INFO] Latest generated module: {mod_path}")
         impl = mod_path
 
+    print(f"[INFO] Loading module: {impl}")
     mod = load_module(impl)
+    print(f"[INFO] Validating implementation...")
     correct = 1 if validate(args.task_id, impl) else 0
+    print(f"[INFO] Validation result: {'correct' if correct else 'incorrect'}")
 
     total_iters = args.warmup + args.runs
+    print(f"[INFO] Total iterations: {total_iters} (warmup: {args.warmup}, runs: {args.runs})")
     for i in range(total_iters):
+        print(f"[INFO] Iteration {i+1}/{total_iters}")
+        print(f"[INFO] Running with tracemalloc...")
         runtime, peak = run_with_tracemalloc(mod)
 
         flops = None
         if not args.skip_perf:
+            print(f"[INFO] Measuring FLOPs with perf...")
             try:
                 flops = run_with_perf(mod)
-            except Exception:
+                print(f"[INFO] FLOPs measured: {flops}")
+            except Exception as e:
+                print(f"[WARN] FLOPs measurement failed: {e}")
                 flops = None
 
         # Energy per run (program-under-test)
         if args.energy_source == "perf":
+            print(f"[INFO] Measuring energy with perf...")
             energy_j = measure_energy_perf(mod.__name__)
+            print(f"[INFO] Energy measured: {energy_j} J")
         elif args.energy_source == "csv":
+            print(f"[INFO] Reading energy from CSV: {args.energy_csv}, index: {i - args.warmup}")
             energy_j = per_run_energy_from_csv(args.energy_csv, i - args.warmup)
+            print(f"[INFO] Energy from CSV: {energy_j} J")
         else:
             energy_j = None
 
         if i < args.warmup:
-            print(f"Warm-up {i}: correct={correct}, t={runtime:.3f}s, mem={peak:.1f} KiB, FLOPs={flops}, E={energy_j}")
+            print(f"[INFO] Warm-up {i}: correct={correct}, t={runtime:.3f}s, mem={peak:.1f} KiB, FLOPs={flops}, E={energy_j}")
             continue
 
         row = dict(
@@ -126,5 +144,6 @@ if __name__ == "__main__":
             energy_j=energy_j if energy_j is not None else "",
             correct=correct
         )
+        print(f"[INFO] Appending results to CSV: {DATA_FILE}")
         append_csv(row)
-        print(f"Run {i - args.warmup}: correct={correct}, t={runtime:.3f}s, mem={peak:.1f} KiB, FLOPs={flops}, E={energy_j}")
+        print(f"[RESULT] Run {i - args.warmup}: correct={correct}, t={runtime:.3f}s, mem={peak:.1f} KiB, FLOPs={flops}, E={energy_j}")
