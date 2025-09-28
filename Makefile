@@ -40,7 +40,7 @@ measure-unit-human:
 # Defaults (override on CLI: MODEL=..., PROMPT=..., VARIANT=..., etc.)
 MODEL ?= deepseek-coder:6.7b
 PROMPT ?= baseline
-VARIANT ?= $$(shell echo $(MODEL)_$(PROMPT) | tr ':/.' '_')
+VARIANT := $(shell echo $(MODEL)_$(PROMPT) | tr ':/.' '_')
 RUNS ?= 10
 WARMUP ?= 2
 ENERGY_SOURCE ?= perf           # perf | csv | none
@@ -60,7 +60,7 @@ full-mod:
 	python -m harness.generate --task-id modular_example --prompt $(PROMPT) --model $(MODEL) --with-codecarbon
 	python -m harness.run --task-id modular_example --impl tasks.generated.modular_example.AUTO_PICK \
 		--variant $(VARIANT) --runs $(RUNS) --warmup $(WARMUP) --energy-source $(ENERGY_SOURCE) \
-		$$( [ "$(ENERGY_SOURCE)" = "csv" ] && echo --energy-csv $(ENERGY_CSV) || true )
+		$$( test "$(ENERGY_SOURCE)" = "csv" && printf -- ' --energy-csv %s' "$(ENERGY_CSV)" || true )
 	python analysis/compute_gc.py
 	python analysis/stats.py
 
@@ -68,6 +68,6 @@ full-unit:
 	python -m harness.generate --task-id unit_test_gen --prompt $(PROMPT) --model $(MODEL) --with-codecarbon
 	python -m harness.run --task-id unit_test_gen --impl tasks.generated.unit_test_gen.AUTO_PICK \
 		--variant $(VARIANT) --runs $(RUNS) --warmup $(WARMUP) --energy-source $(ENERGY_SOURCE) \
-		$$( [ "$(ENERGY_SOURCE)" = "csv" ] && echo --energy-csv $(ENERGY_CSV) || true )
+		$$( test "$(ENERGY_SOURCE)" = "csv" && printf -- ' --energy-csv %s' "$(ENERGY_CSV)" || true )
 	python analysis/compute_gc.py
 	python analysis/stats.py

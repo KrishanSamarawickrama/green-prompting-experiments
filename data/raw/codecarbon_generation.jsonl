@@ -1,2 +1,0 @@
-{"ts": 1759039704.9524622, "task_id": "inefficient_sort", "prompt": "baseline", "model": "deepseek-coder:6.7b", "options": null, "emissions_kg": 4.4813703758562983e-07}
-{"ts": 1759040994.400881, "task_id": "inefficient_sort", "prompt": "baseline", "model": "deepseek-coder:6.7b", "options": null, "emissions_kg": 4.653239208532346e-05}
