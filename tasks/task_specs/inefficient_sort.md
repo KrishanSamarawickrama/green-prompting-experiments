@@ -1,7 +1,18 @@
 # Task: Inefficient Sort → Correct Sorted Output
 
-Write a function `run_task(n=2000, seed=42)` that:
-1) Generates a list of `n` random integers in [0, 10000] using the given `seed`.
-2) Sorts the list and **returns the sorted list**.
+You MUST implement EXACTLY this function signature and semantics:
 
-Determinism: using the same seed and n must return the same list.
+```python
+def run_task(n=2000, seed=42):
+    """
+    Return a sorted list of n random integers in [0, 10000], seeded.
+    Deterministic: same (n, seed) => identical output values/order.
+    No prints, no I/O, no network.
+    """
+ ```
+
+Steps:
+
+- Seed RNG with seed.
+- Generate list of length n with values in [0, 10000].
+- Sort in non-decreasing order and return the sorted list.
