@@ -4,3 +4,5 @@ pytest
 requests
 pyyaml
 psutil
+codecarbon
+scipy

@@ -1,4 +1,4 @@
-import argparse, tracemalloc, time, subprocess, csv, sys, math
+import argparse, tracemalloc, time, subprocess, csv, sys
 from pathlib import Path
 from importlib import import_module
 
@@ -8,17 +8,56 @@ from harness.utils import parse_perf_stderr, FLOPS_EVENT, latest_generated_modul
 DATA_FILE = Path("data/derived/runs.csv")
 DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+# --- Energy helpers (per-run) ---
+import csv as _csv, subprocess as _sp
+
+def measure_energy_perf(python_module_name: str):
+    """
+    Uses perf RAPL counter power/energy-pkg/ to estimate CPU package Joules
+    for the program-under-test run.
+    """
+    cmd = [
+        "perf","stat","-e","power/energy-pkg/",
+        sys.executable,"-c",f"import importlib; m=importlib.import_module('{python_module_name}'); m.run_task()"
+    ]
+    proc = _sp.run(cmd, capture_output=True, text=True)
+    joules = None
+    for line in proc.stderr.splitlines():
+        if "power/energy-pkg/" in line:
+            parts = line.strip().split()
+            try:
+                joules = float(parts[0].replace(",", ""))
+            except Exception:
+                pass
+    return joules
+
+def per_run_energy_from_csv(path: str, idx: int):
+    """
+    Reads a CSV with at least a column 'energy_j' and returns row[idx].energy_j
+    (idx is zero-based per *logged* run; warmups are not logged).
+    """
+    with open(path, newline="") as f:
+        r = _csv.DictReader(f)
+        rows = list(r)
+    if idx < len(rows):
+        try:
+            return float(rows[idx].get("energy_j", ""))
+        except Exception:
+            return None
+    return None
+
+# --- Measurement helpers ---
 def load_module(module_path: str):
     return import_module(module_path)
 
 def run_with_tracemalloc(mod):
     tracemalloc.start()
     t0 = time.perf_counter()
-    res = mod.run_task()
+    _ = mod.run_task()
     dt = time.perf_counter() - t0
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    return dt, peak/1024  # KiB
+    return dt, peak / 1024  # KiB
 
 def run_with_perf(mod):
     cmd = [
@@ -38,43 +77,54 @@ def append_csv(row: dict):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--task-id", required=True, choices=["inefficient_sort","modular_example"])
+    ap.add_argument("--task-id", required=True, choices=["inefficient_sort","modular_example", "unit_test_gen"])
     ap.add_argument("--impl", required=True, help="Module path. Use tasks.generated.<task>.AUTO_PICK to select latest.")
     ap.add_argument("--variant", default="candidate")
-    ap.add_argument("--runs", type=int, default=5)
-    ap.add_argument("--energy", type=float, default=0.0, help="Energy in Joules (per-run unless --energy-total).")
-    ap.add_argument("--energy-total", action="store_true", help="Treat --energy as total for all runs.")
+    ap.add_argument("--runs", type=int, default=10)
+    ap.add_argument("--warmup", type=int, default=2, help="Warm-up runs to discard")
+    ap.add_argument("--energy-source", choices=["none","perf","csv"], default="none", help="How to capture per-run energy")
+    ap.add_argument("--energy-csv", default="", help="CSV with per-run energy_j (when --energy-source=csv)")
     ap.add_argument("--skip-perf", action="store_true", help="Skip FLOPs measurement if perf missing.")
     args = ap.parse_args()
 
     impl = args.impl
     if impl.endswith(".AUTO_PICK"):
-        # e.g., tasks.generated.inefficient_sort.AUTO_PICK
-        task = args.task_id
-        mod = latest_generated_module(task)
-        if not mod:
-            raise SystemExit(f"No generated module found for task {task}.")
-        impl = mod
+        mod_path = latest_generated_module(args.task_id)
+        if not mod_path:
+            raise SystemExit(f"No generated module found for task {args.task_id}.")
+        impl = mod_path
 
     mod = load_module(impl)
     correct = 1 if validate(args.task_id, impl) else 0
 
-    per_run_energy = args.energy
-    if args.energy_total and args.runs > 0:
-        per_run_energy = args.energy / args.runs
-
-    for i in range(args.runs):
+    total_iters = args.warmup + args.runs
+    for i in range(total_iters):
         runtime, peak = run_with_tracemalloc(mod)
+
         flops = None
         if not args.skip_perf:
             try:
                 flops = run_with_perf(mod)
             except Exception:
                 flops = None
+
+        # Energy per run (program-under-test)
+        if args.energy_source == "perf":
+            energy_j = measure_energy_perf(mod.__name__)
+        elif args.energy_source == "csv":
+            energy_j = per_run_energy_from_csv(args.energy_csv, i - args.warmup)
+        else:
+            energy_j = None
+
+        if i < args.warmup:
+            print(f"Warm-up {i}: correct={correct}, t={runtime:.3f}s, mem={peak:.1f} KiB, FLOPs={flops}, E={energy_j}")
+            continue
+
         row = dict(
-            task_id=args.task_id, impl=impl, variant=args.variant, run_idx=i,
+            task_id=args.task_id, impl=impl, variant=args.variant, run_idx=i - args.warmup,
             runtime_s=runtime, mem_kib=peak, flops=flops if flops is not None else "",
-            energy_j=per_run_energy, correct=correct
+            energy_j=energy_j if energy_j is not None else "",
+            correct=correct
         )
         append_csv(row)
-        print(f"Run {i}: correct={correct}, t={runtime:.3f}s, mem={peak:.1f} KiB, FLOPs={flops}, E={per_run_energy} J")
+        print(f"Run {i - args.warmup}: correct={correct}, t={runtime:.3f}s, mem={peak:.1f} KiB, FLOPs={flops}, E={energy_j}")

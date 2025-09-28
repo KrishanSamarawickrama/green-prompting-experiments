@@ -13,6 +13,10 @@ def validate(task_id: str, impl_module: str) -> bool:
     if task_id == "modular_example":
         out = mod.run_task(1000)
         return isinstance(out, float) and math.isfinite(out)
+    
+    if task_id == "unit_test_gen":
+        out = mod.run_task()
+        return isinstance(out, str) and "def test_" in out
 
     # Unknown task => pessimistic
     return False
