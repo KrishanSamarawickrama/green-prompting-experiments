@@ -1,6 +1,10 @@
 task_id,variant,correct,pd_runtime,pd_memory,pd_flops,pd_energy
-inefficient_sort,deepseek-coder_6_7b_baseline,1,0.0,0.0,0.0,0.0
-inefficient_sort,deepseek-coder_6_7b_cot_then_optimize,1,0.0,0.0,0.0,0.0
-inefficient_sort,deepseek-coder_6_7b_eff_from_scratch,1,0.0,0.0,0.0,0.0
-inefficient_sort,deepseek-coder_6_7b_tagged_explained,1,0.0,0.0,0.0,0.0
+inefficient_sort,deepseek-coder_6_7b_baseline,1,0.0882827807459417,-0.08293749211820589,0.0,0.0770562770562772
+inefficient_sort,deepseek-coder_6_7b_cot_then_optimize,1,0.08922681043170502,-0.08293749211820589,0.0,0.038961038961039085
+inefficient_sort,deepseek-coder_6_7b_eff_from_scratch,1,0.8310277880860804,-0.16154525200723024,-1.7062146892655368,-2.793939393939393
+inefficient_sort,deepseek-coder_6_7b_tagged_explained,1,0.07456093109282717,-0.08293749211820589,0.0,-0.08917748917748895
+inefficient_sort,qwen2_5-coder_7b_baseline,1,-0.0882827807459417,0.08293749211820589,0.0,-0.07705627705627702
+inefficient_sort,qwen2_5-coder_7b_cot_then_optimize,1,0.07252523865772378,0.08293749211820589,0.0,0.03636363636363658
+inefficient_sort,qwen2_5-coder_7b_eff_from_scratch,1,0.0811359574587759,0.0859641010551095,0.0,0.09090909090909106
+inefficient_sort,qwen2_5-coder_7b_tagged_explained,1,-0.20833551584270396,-0.08293749211820589,0.0,-1.0398268398268398
 modular_example,deepseek-coder_6_7b_cot_then_optimize,1,0.0,0.0,0.0,0.0
