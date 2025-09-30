@@ -15,3 +15,11 @@ modular_example,qwen2_5-coder_7b_baseline,1,0.05122427905184292,0.0,0.0,0.038043
 modular_example,qwen2_5-coder_7b_cot_then_optimize,1,0.02820434146758046,0.0,0.0,0.061594202898550776
 modular_example,qwen2_5-coder_7b_eff_from_scratch,1,0.3233512128271823,0.0,0.0,0.5235507246376812
 modular_example,qwen2_5-coder_7b_tagged_explained,1,0.051757090087114224,0.0,0.0,-0.098731884057971
+unit_test_gen,deepseek-coder_6_7b_baseline,1,0.03677011945951066,0.0,0.0,0.3538654934003771
+unit_test_gen,deepseek-coder_6_7b_cot_then_optimize,1,-0.11442958716736441,0.0,0.0,-0.5223130106851036
+unit_test_gen,deepseek-coder_6_7b_eff_from_scratch,1,-0.04456589124748304,0.0,0.0,-0.5499685732243873
+unit_test_gen,deepseek-coder_6_7b_tagged_explained,1,-0.17115057975894268,0.0,0.0,-0.3727215587680705
+unit_test_gen,qwen2_5-coder_7b_baseline,1,-0.03677011945951066,0.0,0.0,-0.3538654934003771
+unit_test_gen,qwen2_5-coder_7b_cot_then_optimize,1,0.02484761573372814,0.0,0.0,-0.650534255185418
+unit_test_gen,qwen2_5-coder_7b_eff_from_scratch,1,-0.06609336355851847,0.0,0.0,-0.5449402891263355
+unit_test_gen,qwen2_5-coder_7b_tagged_explained,1,0.11437425144365265,0.0,0.0,0.3350094280326838
