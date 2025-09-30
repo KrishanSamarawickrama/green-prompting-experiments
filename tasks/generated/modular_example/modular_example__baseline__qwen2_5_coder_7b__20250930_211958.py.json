@@ -1,0 +1,23 @@
+{
+  "task_id": "modular_example",
+  "prompt": "baseline",
+  "model": "qwen2.5-coder:7b",
+  "options": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 640,
+    "seed": 42,
+    "stop": [
+      "\n\nExplanation",
+      "\n\nReasoning",
+      "\n\nNotes:",
+      "\n```text",
+      "\n```bash",
+      "\n\nExample",
+      "\n\nOutput:",
+      "\n\nDiscussion"
+    ]
+  },
+  "timestamp": "20250930_211958",
+  "file": "tasks/generated/modular_example/modular_example__baseline__qwen2_5_coder_7b__20250930_211958.py"
+}

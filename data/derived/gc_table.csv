@@ -7,4 +7,11 @@ inefficient_sort,qwen2_5-coder_7b_baseline,0.08293749211820589,1
 inefficient_sort,qwen2_5-coder_7b_cot_then_optimize,0.19182636713956625,1
 inefficient_sort,qwen2_5-coder_7b_eff_from_scratch,0.2580091494229765,1
 inefficient_sort,qwen2_5-coder_7b_tagged_explained,0.0,1
-modular_example,deepseek-coder_6_7b_cot_then_optimize,0.0,1
+modular_example,deepseek-coder_6_7b_baseline,0.0,1
+modular_example,deepseek-coder_6_7b_cot_then_optimize,1.4193577730800764,1
+modular_example,deepseek-coder_6_7b_eff_from_scratch,0.08876811594202906,1
+modular_example,deepseek-coder_6_7b_tagged_explained,0.0,1
+modular_example,qwen2_5-coder_7b_baseline,0.08926775731271253,1
+modular_example,qwen2_5-coder_7b_cot_then_optimize,0.08979854436613124,1
+modular_example,qwen2_5-coder_7b_eff_from_scratch,0.8469019374648634,1
+modular_example,qwen2_5-coder_7b_tagged_explained,0.051757090087114224,1
