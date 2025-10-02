@@ -62,7 +62,45 @@ def get_runner_callable(task_id: str, mod):
     (used for timing + tracemalloc).
     """
     if has_run_task(mod):
-        return getattr(mod, "run_task")
+        run_task = getattr(mod, "run_task")
+        
+        # Task-specific argument handling
+        if task_id == "inefficient_sort":
+            return lambda: run_task(300, seed=7)
+        elif task_id == "json_data_normalizer":
+            # Build test data for json_data_normalizer
+            def _runner():
+                rnd = random.Random(42)
+                data = []
+                for rid in range(2000):
+                    rec = {"id": rid, "timestamp": f"t{rid}"}
+                    if rid % 4 == 0:
+                        rec["user"] = {"id": rid % 10, "name": f"U{rid%10}"}
+                    # 0–3 items
+                    k = rid % 3
+                    if k:
+                        rec["items"] = [{"sku": f"S{(rid+j)%50}", "qty": (j+1)} for j in range(k)]
+                    data.append(rec)
+                return run_task(data)
+            return _runner
+        elif task_id == "log_file_parser":
+            # Build test log lines for log_file_parser
+            def _runner():
+                rnd = random.Random(42)
+                lines = []
+                for i in range(4000):
+                    lines.append(f"[t] INFO start {i}")
+                    if i % 3 == 0:
+                        lines.append(f"[t] ERROR E123: bad {i}")
+                    if i % 10 == 0:
+                        lines.append(f"2025-01-01T00:00:00Z ERROR E42 minor {i}")
+                    if i % 25 == 0 and rnd.random() < 0.5:
+                        lines.append("unstructured line")
+                return run_task(lines)
+            return _runner
+        else:
+            # For other tasks, try calling with no arguments
+            return run_task
 
     # Synthetic but stable workloads for developer tasks
     if task_id == "log_file_parser" and hasattr(mod, "parse_errors"):
@@ -125,7 +163,36 @@ def get_runner_snippet(task_id: str, module_name: str) -> str:
     """
     base = f"import importlib,random; m=importlib.import_module('{module_name}'); "
     if has_run_task(import_module(module_name)):
-        return base + "m.run_task()"
+        if task_id == "inefficient_sort":
+            return base + "m.run_task(300, seed=7)"
+        elif task_id == "json_data_normalizer":
+            return base + (
+                "rnd=random.Random(42); "
+                "data=[]; "
+                "for rid in range(2000): "
+                "  rec={'id':rid,'timestamp':f't{rid}'}; "
+                "  "
+                "  rec.update({'user':{'id':rid%10,'name':f'U{rid%10}'}}) if rid%4==0 else None; "
+                "  k=rid%3; "
+                "  rec.update({'items':[{'sku':f'S{(rid+j)%50}','qty':(j+1)} for j in range(k)]}) if k else None; "
+                "  data.append(rec); "
+                "m.run_task(data)"
+            )
+        elif task_id == "log_file_parser":
+            return base + (
+                "rnd=random.Random(42); "
+                "lines=[]; "
+                "import sys; "
+                "[(lines.append(f'[t] INFO start {i}'), "
+                "  lines.append(f'[t] ERROR E123: bad {i}') if i%3==0 else None, "
+                "  lines.append(f'2025-01-01T00:00:00Z ERROR E42 minor {i}') if i%10==0 else None, "
+                "  lines.append('unstructured line') if (i%25==0 and rnd.random()<0.5) else None) "
+                " for i in range(4000)]; "
+                "m.run_task(lines)"
+            )
+        else:
+            # For other tasks, try calling with no arguments
+            return base + "m.run_task()"
 
     if task_id == "log_file_parser":
         return base + (
