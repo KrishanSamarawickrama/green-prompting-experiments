@@ -2,6 +2,8 @@
 # Script to run all required make commands for green-prompting-experiments
 set -e
 
+. venv/bin/activate
+
 # full-sort
 make full-sort MODEL=deepseek-coder:6.7b PROMPT=baseline
 make full-sort MODEL=deepseek-coder:6.7b PROMPT=cot_then_optimize
