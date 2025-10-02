@@ -6,3 +6,4 @@ pyyaml
 psutil
 codecarbon
 scipy
+seaborn

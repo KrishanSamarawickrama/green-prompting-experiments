@@ -24,8 +24,6 @@ env/
 .ipynb_checkpoints/
 # VS Code
 .vscode/
-# Jupyter Notebook
-*.ipynb
 # MacOS
 .DS_Store
 # Windows
