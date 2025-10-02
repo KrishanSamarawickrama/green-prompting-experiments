@@ -44,7 +44,8 @@ def validate(task_id: str, impl_module: str) -> bool:
     is treated as invalid (False), not a hard crash.
     """
     mod = import_module(impl_module)
-    if not hasattr(mod, "run_task"):
+    # For cache_with_expiry, we can validate without run_task function
+    if task_id != "cache_with_expiry" and not hasattr(mod, "run_task"):
         return False
 
     try:
@@ -115,35 +116,64 @@ def validate(task_id: str, impl_module: str) -> bool:
 
         if task_id == "cache_with_expiry":
             """
-            Expectation: run_task returns True when a basic TTL behavior test passes.
-            We attempt a few calling conventions to be robust to signature differences:
-              - run_task(ttl_seconds=1)
-              - run_task(1)
-              - run_task()   (where the function internally tests TTL behavior)
+            Test the ExpiringCache class implementation directly.
             Valid behavior:
-              1) get("k") -> None
-              2) put("k","v") then get("k") == "v"
-              3) after ~1.1s, get("k") -> None (expired)
-              4) put again and get returns the new value
+              1) get("k") -> None (empty cache)
+              2) put("k","v") then get("k") == "v" (basic functionality)
+              3) after TTL expires, get("k") -> None (expiration works)
+              4) put again and get returns the new value (cache continues to work)
             """
-            # Preferred: let the candidate perform and return a boolean (self-test)
-            # Try keyword first, then positional, then no-arg.
-            try_orders = [
-                lambda: mod.run_task(ttl_seconds=1),  # keyword
-                lambda: mod.run_task(1),              # positional
-                lambda: mod.run_task(),               # no-arg
-            ]
-            for attempt in try_orders:
-                try:
-                    res = attempt()
-                    if isinstance(res, bool):
-                        return res
-                except TypeError:
-                    # signature mismatch, try next calling convention
-                    continue
-            # If candidate didn't implement a self-test returning bool, we cannot validate further.
-            # Treat as invalid.
-            return False
+            # First try run_task function if it exists (for backwards compatibility)
+            if hasattr(mod, "run_task"):
+                try_orders = [
+                    lambda: mod.run_task(ttl_seconds=1),  # keyword
+                    lambda: mod.run_task(1),              # positional
+                    lambda: mod.run_task(),               # no-arg
+                ]
+                for attempt in try_orders:
+                    try:
+                        res = attempt()
+                        if isinstance(res, bool):
+                            return res
+                    except TypeError:
+                        continue
+            
+            # Test ExpiringCache class directly
+            if not hasattr(mod, "ExpiringCache"):
+                return False
+            
+            try:
+                # Test with 1 second TTL
+                cache = mod.ExpiringCache(1)
+                
+                # Test 1: get from empty cache should return None
+                if cache.get("test_key") is not None:
+                    return False
+                
+                # Test 2: put then get should return the value
+                cache.put("test_key", "test_value")
+                if cache.get("test_key") != "test_value":
+                    return False
+                
+                # Test 3: after TTL expires, should return None
+                time.sleep(1.1)  # Wait slightly longer than TTL
+                if cache.get("test_key") is not None:
+                    return False
+                
+                # Test 4: put new value and verify it works
+                cache.put("test_key", "new_value")
+                if cache.get("test_key") != "new_value":
+                    return False
+                
+                # Test 5: different key should work independently
+                cache.put("other_key", "other_value")
+                if cache.get("other_key") != "other_value":
+                    return False
+                
+                return True
+                
+            except Exception:
+                return False
 
     except TypeError:
         # wrong signature → treat as invalid, not a hard crash

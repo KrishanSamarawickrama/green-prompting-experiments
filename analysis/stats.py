@@ -19,11 +19,30 @@ def pairwise_tests(metric="runtime_s"):
             a = g[g["variant"]==v1][metric].dropna()
             b = g[g["variant"]==v2][metric].dropna()
             if len(a) >= 2 and len(b) >= 2:
-                # Welch's t-test and Mann-Whitney as non-parametric
-                try: t, p = stats.ttest_ind(a, b, equal_var=False)
-                except Exception: t, p = np.nan, np.nan
+                # Check for nearly identical data that causes precision issues
+                a_var = np.var(a)
+                b_var = np.var(b)
+                
+                # Welch's t-test with precision check
+                if a_var == 0 and b_var == 0:
+                    # Both groups are constant - check if means are equal
+                    t = 0.0 if np.mean(a) == np.mean(b) else np.inf
+                    p = 1.0 if np.mean(a) == np.mean(b) else 0.0
+                elif a_var == 0 or b_var == 0:
+                    # One group is constant - may cause precision issues
+                    try: 
+                        t, p = stats.ttest_ind(a, b, equal_var=False)
+                    except (RuntimeWarning, ValueError): 
+                        t, p = np.nan, np.nan
+                else:
+                    # Normal case
+                    try: t, p = stats.ttest_ind(a, b, equal_var=False)
+                    except Exception: t, p = np.nan, np.nan
+                
+                # Mann-Whitney U test (more robust to identical values)
                 try: w, p_w = stats.mannwhitneyu(a, b, alternative="two-sided")
                 except Exception: w, p_w = np.nan, np.nan
+                
                 out.append({"task_id": task, "metric": metric, "v1": v1, "v2": v2, "t": t, "p_t": p, "mw": w, "p_mw": p_w})
     return pd.DataFrame(out)
 
@@ -34,8 +53,21 @@ def anova(metric="runtime_s"):
         grouped = [grp[metric].dropna().values for _, grp in g.groupby("variant")]
         labels = list(dict.fromkeys(g["variant"]))
         if len(grouped) >= 2 and all(len(x) >= 2 for x in grouped):
-            try: f, p = stats.f_oneway(*grouped)
-            except Exception: f, p = np.nan, np.nan
+            # Check if any group has constant values (variance = 0)
+            variances = [np.var(x) for x in grouped]
+            if all(v == 0 for v in variances):
+                # All groups are constant - F statistic undefined
+                f, p = np.nan, np.nan
+            elif any(v == 0 for v in variances):
+                # Some groups are constant - may still cause issues
+                try: 
+                    f, p = stats.f_oneway(*grouped)
+                except (ValueError, RuntimeWarning): 
+                    f, p = np.nan, np.nan
+            else:
+                # Normal case
+                try: f, p = stats.f_oneway(*grouped)
+                except Exception: f, p = np.nan, np.nan
             out.append({"task_id": task, "metric": metric, "f": f, "p": p, "k": len(grouped), "variants": ",".join(labels)})
     return pd.DataFrame(out)
 

@@ -1,0 +1,23 @@
+{
+  "task_id": "inefficient_sort",
+  "prompt": "tagged_explained",
+  "model": "qwen2.5-coder:7b",
+  "options": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 640,
+    "seed": 42,
+    "stop": [
+      "\n\nExplanation",
+      "\n\nReasoning",
+      "\n\nNotes:",
+      "\n```text",
+      "\n```bash",
+      "\n\nExample",
+      "\n\nOutput:",
+      "\n\nDiscussion"
+    ]
+  },
+  "timestamp": "20251002_131505",
+  "file": "tasks/generated/inefficient_sort/inefficient_sort__tagged_explained__qwen2_5_coder_7b__20251002_131505.py"
+}

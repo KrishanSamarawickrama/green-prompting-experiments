@@ -17,10 +17,18 @@ agg = df.groupby(["task_id","variant"]).agg(
     n=("runtime_s","size")
 ).reset_index()
 
-# Baseline join
-base = agg[agg["variant"]=="baseline"][["task_id","runtime_s","mem_kib","flops","energy_j"]].rename(columns={
+# Baseline join - find variants that end with "_baseline"
+base = agg[agg["variant"].str.endswith("_baseline")][["task_id","variant","runtime_s","mem_kib","flops","energy_j"]].rename(columns={
     "runtime_s":"runtime_base","mem_kib":"mem_base","flops":"flops_base","energy_j":"energy_base"
 })
+
+# For multiple baseline variants per task, take the mean
+base = base.groupby("task_id").agg(
+    runtime_base=("runtime_base","mean"),
+    mem_base=("mem_base","mean"), 
+    flops_base=("flops_base","mean"),
+    energy_base=("energy_base","mean")
+).reset_index()
 merged = agg.merge(base, on="task_id", how="left")
 
 # PDs (masked by correctness)

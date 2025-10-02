@@ -1,0 +1,23 @@
+{
+  "task_id": "unit_test_gen",
+  "prompt": "eff_from_scratch",
+  "model": "deepseek-coder:6.7b",
+  "options": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 640,
+    "seed": 42,
+    "stop": [
+      "\n\nExplanation",
+      "\n\nReasoning",
+      "\n\nNotes:",
+      "\n```text",
+      "\n```bash",
+      "\n\nExample",
+      "\n\nOutput:",
+      "\n\nDiscussion"
+    ]
+  },
+  "timestamp": "20251002_132613",
+  "file": "tasks/generated/unit_test_gen/unit_test_gen__eff_from_scratch__deepseek_coder_6_7b__20251002_132613.py"
+}
